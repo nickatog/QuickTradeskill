@@ -1,0 +1,44 @@
+9
+
+dir
+0
+svn://svn.wowinterface.com/QuickTradeskill-413/trunk/Libs
+svn://svn.wowinterface.com/QuickTradeskill-413
+add
+
+
+
+
+
+
+
+svn:special svn:externals svn:needs-lock
+
+LibStub
+dir
+
+
+
+add
+
+LibPeriodicTable-3.1-Tradeskill
+dir
+
+
+
+add
+
+LibPeriodicTable-3.1
+dir
+
+
+
+add
+
+Ritual-1.0
+dir
+
+
+
+add
+

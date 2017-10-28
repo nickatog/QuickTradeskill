@@ -1,0 +1,340 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
+	<Script file="Libs\LibStub\LibStub.lua"/>
+	<Script file="Libs\Ritual-1.0\Ritual-1.0.lua"/>
+	<Script file="Libs\LibPeriodicTable-3.1\LibPeriodicTable-3.1.lua"/>
+	<Script file="Libs\LibPeriodicTable-3.1-Tradeskill\LibPeriodicTable-3.1-Tradeskill.lua"/>
+	<Script file="QuickTradeskill.lua"/>
+	<Frame name="QuickTradeskillFrame" parent="UIParent" movable="true" resizable="true" enableMouse="true" frameStrata="FULLSCREEN_DIALOG" hidden="true">
+		<Size>
+			<AbsDimension x="350" y="42"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border" tile="true">
+			<TileSize>
+				<AbsValue val="16"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+		</Backdrop>
+		<Scripts>
+			<OnLoad>
+				QuickTradeskill:OnLoad()
+			</OnLoad>
+			<OnEvent>
+				QuickTradeskill:OnEvent(event, ...)
+			</OnEvent>
+			<OnShow>
+				if UnitCastingInfo("player") == nil then -- Repopulating while crafting kills batch craft casts
+					QuickTradeskill:PopulateTradeSkillData()
+				end
+				QuickTradeskill:Search(QuickTradeskillFrameEditBox:GetText())
+				QuickTradeskillFrameEditBox:SetFocus()
+				QuickTradeskillFrameEditBox:HighlightText()
+			</OnShow>
+			<OnHide>
+				QuickTradeskillFrameResultMulti:Hide()
+			</OnHide>
+			<OnDragStart>
+				if IsControlKeyDown() then
+					self:StartSizing("RIGHT")
+				else
+					self:StartMoving()
+				end
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing()
+			</OnDragStop>
+			<OnSizeChanged>
+				local newWidth = self:GetWidth()
+				QuickTradeskillFrameEditBox:SetWidth(newWidth - 50)
+				QuickTradeskillFrameEditBoxTexture:SetWidth(newWidth - 30)
+				QuickTradeskillUp:SetWidth(newWidth)
+				QuickTradeskillDown:SetWidth(newWidth)
+				for i=1, #ResultFrames do
+					ResultFrames[i]:SetWidth(newWidth)
+				end
+			</OnSizeChanged>
+		</Scripts>
+		<Frames>
+			<Button name="QuickTradeskillClose" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="LEFT"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						QuickTradeskillFrame:Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="QuickTradeskillUp" inherits="UIPanelButtonTemplate2" text="^" hidden="true">
+				<Size>
+					<AbsDimension x="350" y="16" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="QuickTradeskillFrame" relativePoint="BOTTOM" />
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						self.enabled = false
+					</OnLoad>
+					<OnClick>
+						QuickTradeskill:ScrollUp()
+					</OnClick>
+					<OnHide>
+						self.enabled = false
+					</OnHide>
+				</Scripts>
+			</Button>
+			<Button name="QuickTradeskillDown" inherits="UIPanelButtonTemplate2" text="v" hidden="true">
+				<Size>
+					<AbsDimension x="350" y="16" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="QuickTradeskillFrame" relativePoint="BOTTOM">
+						<Offset>
+							<AbsDimension x="0" y="-230" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						self.enabled = false
+					</OnLoad>
+					<OnClick>
+						QuickTradeskill:ScrollDown()
+					</OnClick>
+					<OnHide>
+						self.enabled = false
+					</OnHide>
+				</Scripts>
+			</Button>
+			<EditBox name="QuickTradeskillFrameEditBox" autoFocus="false" enableKeyboard="true">
+				<Size>
+					<AbsDimension x="300" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="QuickTradeskillClose" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="4" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="QuickTradeskillFrameEditBoxTexture" file="Interface/ChatFrame/UI-ChatInputBorder">
+							<Size>
+								<AbsDimension x="320" y="32"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER">
+									<Offset>
+										<AbsDimension x="-4" y="0" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEscapePressed>
+						self:ClearFocus()
+					</OnEscapePressed>
+					<OnEnterPressed>
+						QuickTradeskill:Search(self:GetText())
+					</OnEnterPressed>
+				</Scripts>
+				<FontString inherits="ChatFontNormal"/>
+			</EditBox>
+		</Frames>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="QuickTradeskillResultString" inherits="GameFontNormal">
+					<Anchors>
+						<Anchor point="BOTTOM" relativeTo="QuickTradeskillFrame" relativePoint="TOP"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+	<GameTooltip name="QuickTradeskillTooltip" inherits="GameTooltipTemplate" parent="QuickTradeskillFrame" hidden="true"/>
+	<Frame name="QuickTradeskillFrameResult" enableMouse="true" frameStrata="FULLSCREEN_DIALOG" hidden="true" virtual="true">
+		<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border" tile="true">
+			<TileSize>
+				<AbsValue val="16"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4"/>
+			</BackgroundInsets>
+		</Backdrop>
+		<Scripts>
+			<OnEnter>
+				QuickTradeskillTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 0, 42)
+				QuickTradeskillTooltip:SetHyperlink(self.link)
+				QuickTradeskillTooltip:Show()
+				self:SetBackdropColor(0.5, 0.5, 0.5)
+			</OnEnter>
+			<OnLeave>
+				QuickTradeskillTooltip:Hide()
+				self:SetBackdropColor(0, 0, 0)
+			</OnLeave>
+			<OnClick>
+				if IsShiftKeyDown() then
+					if ChatFrameEditBox:IsVisible() then
+						ChatFrameEditBox:Insert(self.link)
+					end
+				elseif self.madebyme then
+					if IsControlKeyDown() then
+						local q = QuickTradeskillFrameResultMulti
+						q:SetPoint("RIGHT", this, "LEFT")
+						q:Show()
+						q:SetBackdropColor(0, 0, 0)
+						q = ResultMultiBoxEdit
+						q.profession = self.profession
+						q.id = self.id
+						q:SetText(tostring(self.num))
+						q:HighlightText()
+						q:SetFocus()
+						q:SetCursorPosition(0)
+					else
+						QuickTradeskill:RunOnClick(self.profession, self.id, 1)
+					end
+				end
+			</OnClick>
+			<OnMouseWheel>
+				QuickTradeskill:ScrollWheel(arg1)
+			</OnMouseWheel>
+		</Scripts>
+	</Frame>
+	<Frame name="QuickTradeskillFrameResultMulti" frameStrata="FULLSCREEN_DIALOG" enableMouse="true">
+		<Size>
+			<AbsDimension x="38" y="38" />
+		</Size>
+		<Backdrop bgFile="Interface/Tooltips/UI-Tooltip-Background" edgeFile="Interface/Tooltips/UI-Tooltip-Border" tile="true">
+			<TileSize>
+				<AbsValue val="16" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="16" />
+			</EdgeSize>
+			<BackgroundInsets>
+				<AbsInset left="4" right="4" top="4" bottom="4" />
+			</BackgroundInsets>
+		</Backdrop>
+		<Frames>
+			<EditBox name="ResultMultiBoxEdit" autoFocus="false" enableKeyboard="true">
+				<Size>
+					<AbsDimension x="30" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="QuickTradeskillFrameResultMulti" relativePoint="LEFT">
+						<Offset x="6" y="0" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+							self:SetNumeric(true)
+							self:SetMaxLetters(3)
+					</OnLoad>
+					<OnEscapePressed>
+						QuickTradeskillFrameResultMulti:Hide()
+					</OnEscapePressed>
+					<OnEnterPressed>
+						QuickTradeskill:RunOnClick(self.profession, self.id, self:GetText())
+						QuickTradeskillFrameResultMulti:Hide()
+					</OnEnterPressed>
+				</Scripts>
+				<FontString inherits="ChatFontNormal"/>
+			</EditBox>
+		</Frames>
+	</Frame>
+	<Frame name="QuickTradeskillOptions">
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="QuickTradeskillOptionsTitle" text="QuickTradeskill" inherits="GameFontNormalLarge">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="15" y="-15"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="QuickTradeskillOptionsLimit" text="Number Of Result Frames To Show:" inherits="GameFontNormal">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="QuickTradeskillOptionsTitle" relativePoint="BOTTOMLEFT">
+							<Offset>
+								<AbsDimension x="0" y="-10"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<EditBox name="QuickTradeskillOptionsLimitNum" autoFocus="false" enableKeyboard="true">
+				<Size>
+					<AbsDimension x="26" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="QuickTradeskillOptionsLimit" relativePoint="RIGHT"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						self:SetNumeric(true)
+						self:SetMaxLetters(2)
+					</OnLoad>
+					<OnShow>
+						if QuickTradeskillSVar.ResultLimit then
+							self:SetNumber(QuickTradeskillSVar.ResultLimit)
+						end
+					</OnShow>
+					<OnTextChanged>
+						if self:GetNumLetters() > 0 then
+							QuickTradeskillSVar.ResultLimit = self:GetNumber()
+						end
+					</OnTextChanged>
+					<OnEscapePressed>
+						self:ClearFocus()
+					</OnEscapePressed>
+				</Scripts>
+				<FontString inherits="ChatFontNormal"/>
+			</EditBox>
+			<CheckButton name="QuickTradeskillComplete" inherits="OptionsCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="QuickTradeskillOptionsLimit" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="0" y="-4"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						getglobal(self:GetName() .. "Text"):SetText("Search ONLY Recipes You Know")
+					</OnLoad>
+					<OnShow>
+						if QuickTradeskillSVar.Complete ~= nil then
+							self:SetChecked(not QuickTradeskillSVar.Complete)
+						end
+					</OnShow>
+					<OnClick>
+						QuickTradeskillSVar.Complete = not self:GetChecked()
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				QuickTradeskill:LoadOptions(self)
+			</OnLoad>
+		</Scripts>
+	</Frame>
+</Ui>

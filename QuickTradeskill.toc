@@ -1,0 +1,8 @@
+## Interface: 30100
+## Title: QuickTradeskill
+## Version: 3.0
+## Author: Kjado (nandersoncs@gmail.com)
+## Notes: Tradeskill search and quick-launcher.
+## SavedVariables: QuickTradeskillSVar
+
+QuickTradeskill.xml

@@ -1,0 +1,9 @@
+<Bindings>
+	<Binding name="Open/Close QTS" header="QuickTradeskillHeader">
+		if (QuickTradeskillFrame:IsVisible()) then
+			QuickTradeskillFrame:Hide()
+		else
+			QuickTradeskillFrame:Show()
+		end
+	</Binding>
+</Bindings>
